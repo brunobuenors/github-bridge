@@ -1,5 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
+import { enviarParaLovable } from "./bot.js";
 
 const app = express();
 
@@ -18,7 +19,18 @@ app.get("/prompt", (req, res) => {
   res.send(ultimoPrompt || "Nenhum prompt gerado ainda");
 });
 
-// webhook
+// 🔥 TESTE DO BOT
+app.get("/test-bot", async (req, res) => {
+  const prompt = "Teste automático do bot 🚀";
+
+  console.log("🧪 Testando bot manualmente...");
+
+  await enviarParaLovable(prompt);
+
+  res.send("Bot executado!");
+});
+
+// webhook GitHub
 app.post("/github-webhook", async (req, res) => {
   console.log("🔥 Push recebido do GitHub!");
 
