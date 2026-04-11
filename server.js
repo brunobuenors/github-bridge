@@ -2,15 +2,12 @@ import express from "express";
 
 const app = express();
 
-// Middleware pra ler JSON (OBRIGATÓRIO)
 app.use(express.json());
 
-// Rota de teste (abre no navegador)
 app.get("/", (req, res) => {
   res.send("Servidor rodando 🚀");
 });
 
-// Webhook do GitHub
 app.post("/github-webhook", async (req, res) => {
   console.log("🔥 Push recebido do GitHub!");
 
@@ -19,25 +16,37 @@ app.post("/github-webhook", async (req, res) => {
     const commits = req.body.commits || [];
 
     console.log("📦 Repo:", repo);
-    console.log("📨 Quantidade de commits:", commits.length);
 
-    // Monta resumo dos commits
-    const resumo = commits.map(c => `- ${c.message}`).join("\n");
+    let arquivos = [];
 
+    commits.forEach(commit => {
+      if (commit.added) arquivos.push(...commit.added);
+      if (commit.modified) arquivos.push(...commit.modified);
+      if (commit.removed) arquivos.push(...commit.removed);
+    });
+
+    arquivos = [...new Set(arquivos)];
+
+    console.log("📂 Arquivos alterados:", arquivos);
+
+    // 🔥 GERANDO PROMPT MAIS INTELIGENTE
     const prompt = `
-Atualize o app com base nessas mudanças:
+Projeto: ${repo}
 
-${resumo}
+Arquivos alterados:
+${arquivos.join("\n")}
 
-Mantenha design moderno, estilo aplicativo, organizado e funcional.
+Mensagens dos commits:
+${commits.map(c => "- " + c.message).join("\n")}
+
+Atualize o aplicativo com base nessas alterações.
+Mantenha design moderno, organizado e funcional.
 `;
 
     console.log("🧠 Prompt gerado:");
     console.log(prompt);
 
-    // 👉 FUTURO: enviar pro Lovable aqui
-
-    res.status(200).send("Webhook recebido com sucesso 🚀");
+    res.status(200).send("Webhook processado 🚀");
 
   } catch (error) {
     console.error("❌ Erro:", error);
@@ -45,9 +54,8 @@ Mantenha design moderno, estilo aplicativo, organizado e funcional.
   }
 });
 
-// Porta dinâmica do Render
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Rodando na porta ${PORT}`);
 });
