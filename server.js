@@ -5,27 +5,28 @@ const app = express();
 
 app.use(express.json());
 
-// Rota teste
+// teste
 app.get("/", (req, res) => {
   res.send("Servidor rodando 🚀");
 });
 
-// Webhook GitHub
+// webhook
 app.post("/github-webhook", async (req, res) => {
   console.log("🔥 Push recebido do GitHub!");
 
   try {
     const repo = req.body.repository?.full_name;
     const commits = req.body.commits || [];
+    const branch = req.body.ref?.replace("refs/heads/", "");
 
     console.log("📦 Repo:", repo);
+    console.log("🌿 Branch:", branch);
 
     let arquivos = [];
 
     commits.forEach(commit => {
       if (commit.added) arquivos.push(...commit.added);
       if (commit.modified) arquivos.push(...commit.modified);
-      if (commit.removed) arquivos.push(...commit.removed);
     });
 
     arquivos = [...new Set(arquivos)];
@@ -34,13 +35,12 @@ app.post("/github-webhook", async (req, res) => {
 
     let conteudoArquivos = "";
 
-    // 🔥 BUSCAR CONTEÚDO REAL DOS ARQUIVOS
     for (const file of arquivos) {
       try {
         console.log("🔍 Buscando arquivo:", file);
 
         const response = await fetch(
-          `https://api.github.com/repos/${repo}/contents/${file}`,
+          `https://api.github.com/repos/${repo}/contents/${file}?ref=${branch}`,
           {
             headers: {
               "User-Agent": "github-bridge",
@@ -54,9 +54,11 @@ app.post("/github-webhook", async (req, res) => {
         if (data.content) {
           const decoded = Buffer.from(data.content, "base64").toString("utf-8");
 
+          console.log(`✅ Conteúdo carregado: ${file}`);
+
           conteudoArquivos += `\n\n### ${file}\n${decoded}`;
         } else {
-          console.log("⚠️ Sem conteúdo para:", file);
+          console.log("⚠️ Não veio conteúdo:", file);
           console.log(data);
         }
 
@@ -76,13 +78,13 @@ Conteúdo dos arquivos:
 ${conteudoArquivos}
 
 Atualize o app com base nesses códigos.
-Mantenha design moderno, organizado e funcional.
+Mantenha design moderno e funcional.
 `;
 
     console.log("🧠 PROMPT COMPLETO:");
     console.log(prompt);
 
-    res.status(200).send("Webhook processado com sucesso 🚀");
+    res.status(200).send("Webhook processado 🚀");
 
   } catch (error) {
     console.error("❌ Erro geral:", error);
@@ -93,5 +95,5 @@ Mantenha design moderno, organizado e funcional.
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Rodando na porta ${PORT}`);
 });
