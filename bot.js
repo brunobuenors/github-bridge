@@ -6,7 +6,6 @@ let instalado = false;
 export async function enviarParaLovable(prompt) {
   console.log("🤖 Iniciando bot Lovable...");
 
-  // 🔥 instala chromium se precisar
   if (!instalado) {
     try {
       console.log("📦 Instalando Chromium...");
@@ -29,29 +28,28 @@ export async function enviarParaLovable(prompt) {
 
   try {
     console.log("🌐 Abrindo Lovable...");
-    await page.goto("https://lovable.dev");
+
+    await page.setExtraHTTPHeaders({
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    });
+
+    await page.goto("https://lovable.dev", {
+      waitUntil: "domcontentloaded",
+      timeout: 60000
+    });
+
+    console.log("✅ Página carregada!");
 
     await page.waitForTimeout(6000);
 
-    console.log("🎯 Procurando campo de texto...");
-
-    // 🔥 seletor do editor (o que você mandou)
     const editor = page.locator(".tiptap.ProseMirror").first();
 
     await editor.click();
-
-    console.log("⌨️ Digitando prompt...");
-
     await page.keyboard.type(prompt, { delay: 10 });
 
-    console.log("🚀 Procurando botão...");
+    await page.locator("button").first().click();
 
-    // 🔥 tenta clicar no botão de gerar
-    await page.locator("button").filter({ hasText: "Generate" }).click();
-
-    console.log("✅ Prompt enviado!");
-
-    await page.waitForTimeout(8000);
+    console.log("🚀 Prompt enviado!");
 
   } catch (err) {
     console.log("❌ Erro no bot:");
