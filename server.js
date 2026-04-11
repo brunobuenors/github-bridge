@@ -5,10 +5,20 @@ const app = express();
 
 app.use(express.json());
 
+// 🔥 variável global pra guardar o último prompt
+let ultimoPrompt = "";
+
+// rota teste
 app.get("/", (req, res) => {
   res.send("Servidor rodando 🚀");
 });
 
+// 🔥 rota pra visualizar o prompt
+app.get("/prompt", (req, res) => {
+  res.send(ultimoPrompt || "Nenhum prompt gerado ainda");
+});
+
+// webhook
 app.post("/github-webhook", async (req, res) => {
   console.log("🔥 Push recebido do GitHub!");
 
@@ -79,6 +89,9 @@ ${conteudoArquivos}
 Atualize o app com base nesses códigos.
 Mantenha design moderno e funcional.
 `;
+
+    // 🔥 salva o prompt
+    ultimoPrompt = prompt;
 
     console.log("🧠 PROMPT COMPLETO:");
     console.log(prompt);
