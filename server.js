@@ -1,48 +1,53 @@
 import express from "express";
 
 const app = express();
+
+// Middleware pra ler JSON (OBRIGATÓRIO)
 app.use(express.json());
 
-// rota teste
+// Rota de teste (abre no navegador)
 app.get("/", (req, res) => {
-  res.send("Bridge funcionando 🚀");
+  res.send("Servidor rodando 🚀");
 });
 
-// webhook do github
+// Webhook do GitHub
 app.post("/github-webhook", async (req, res) => {
-  console.log("🔥 Push recebido do GitHub");
+  console.log("🔥 Push recebido do GitHub!");
 
   try {
-    const repo = req.body.repository.full_name;
-    const commits = req.body.commits;
+    const repo = req.body.repository?.full_name;
+    const commits = req.body.commits || [];
 
-    console.log("Repo:", repo);
-    console.log("Commits:", commits.length);
+    console.log("📦 Repo:", repo);
+    console.log("📨 Quantidade de commits:", commits.length);
 
-    // 👇 Aqui começa a mágica
-    const resumo = commits.map(c => c.message).join("\n");
+    // Monta resumo dos commits
+    const resumo = commits.map(c => `- ${c.message}`).join("\n");
 
     const prompt = `
 Atualize o app com base nessas mudanças:
 
 ${resumo}
 
-Mantenha layout moderno e estilo aplicativo.
+Mantenha design moderno, estilo aplicativo, organizado e funcional.
 `;
 
     console.log("🧠 Prompt gerado:");
     console.log(prompt);
 
-    // 👉 aqui futuramente envia pro Lovable
+    // 👉 FUTURO: enviar pro Lovable aqui
 
-    res.send("Webhook processado");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro");
+    res.status(200).send("Webhook recebido com sucesso 🚀");
+
+  } catch (error) {
+    console.error("❌ Erro:", error);
+    res.status(500).send("Erro no servidor");
   }
 });
 
+// Porta dinâmica do Render
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log("Rodando na porta", PORT);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
