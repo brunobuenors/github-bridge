@@ -15,42 +15,56 @@ app.post("/github-webhook", async (req, res) => {
     const repo = req.body.repository?.full_name;
     const commits = req.body.commits || [];
 
-    console.log("📦 Repo:", repo);
-
     let arquivos = [];
 
     commits.forEach(commit => {
       if (commit.added) arquivos.push(...commit.added);
       if (commit.modified) arquivos.push(...commit.modified);
-      if (commit.removed) arquivos.push(...commit.removed);
     });
 
     arquivos = [...new Set(arquivos)];
 
-    console.log("📂 Arquivos alterados:", arquivos);
+    console.log("📂 Arquivos:", arquivos);
 
-    // 🔥 GERANDO PROMPT MAIS INTELIGENTE
+    let conteudoArquivos = "";
+
+    // 🔥 BUSCA O CONTEÚDO REAL DOS ARQUIVOS
+    for (const file of arquivos) {
+      try {
+        const response = await fetch(
+          `https://api.github.com/repos/${repo}/contents/${file}`
+        );
+
+        const data = await response.json();
+
+        if (data.content) {
+          const decoded = Buffer.from(data.content, "base64").toString("utf-8");
+
+          conteudoArquivos += `\n\n### ${file}\n${decoded}`;
+        }
+      } catch (err) {
+        console.log("Erro ao buscar arquivo:", file);
+      }
+    }
+
     const prompt = `
 Projeto: ${repo}
 
-Arquivos alterados:
-${arquivos.join("\n")}
+Aqui estão os arquivos atualizados:
+${conteudoArquivos}
 
-Mensagens dos commits:
-${commits.map(c => "- " + c.message).join("\n")}
-
-Atualize o aplicativo com base nessas alterações.
-Mantenha design moderno, organizado e funcional.
+Atualize o app com base nesses códigos.
+Mantenha design moderno e funcional.
 `;
 
-    console.log("🧠 Prompt gerado:");
+    console.log("🧠 PROMPT COMPLETO:");
     console.log(prompt);
 
-    res.status(200).send("Webhook processado 🚀");
+    res.status(200).send("Webhook com código completo 🚀");
 
   } catch (error) {
-    console.error("❌ Erro:", error);
-    res.status(500).send("Erro no servidor");
+    console.error(error);
+    res.status(500).send("Erro");
   }
 });
 
