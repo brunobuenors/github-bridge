@@ -5,12 +5,10 @@ const app = express();
 
 app.use(express.json());
 
-// teste
 app.get("/", (req, res) => {
   res.send("Servidor rodando 🚀");
 });
 
-// webhook
 app.post("/github-webhook", async (req, res) => {
   console.log("🔥 Push recebido do GitHub!");
 
@@ -43,6 +41,7 @@ app.post("/github-webhook", async (req, res) => {
           `https://api.github.com/repos/${repo}/contents/${file}?ref=${branch}`,
           {
             headers: {
+              "Authorization": `token ${process.env.GITHUB_TOKEN}`,
               "User-Agent": "github-bridge",
               "Accept": "application/vnd.github.v3+json"
             }
@@ -58,7 +57,7 @@ app.post("/github-webhook", async (req, res) => {
 
           conteudoArquivos += `\n\n### ${file}\n${decoded}`;
         } else {
-          console.log("⚠️ Não veio conteúdo:", file);
+          console.log("⚠️ Sem conteúdo:", file);
           console.log(data);
         }
 
