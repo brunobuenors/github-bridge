@@ -6,7 +6,6 @@ let instalado = false;
 export async function enviarParaLovable(prompt) {
   console.log("🤖 Iniciando bot Lovable...");
 
-  // instala chromium 1x
   if (!instalado) {
     try {
       console.log("📦 Instalando Chromium...");
@@ -28,60 +27,53 @@ export async function enviarParaLovable(prompt) {
       args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
-    const context = await browser.newContext({
-      userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
-    });
-
-    const page = await context.newPage();
+    const page = await browser.newPage();
 
     console.log("🌐 Abrindo Lovable...");
 
     await page.goto("https://lovable.dev", {
       waitUntil: "domcontentloaded",
-      timeout: 60000
+      timeout: 45000
     });
 
     console.log("✅ Página carregada!");
 
-    // espera interface carregar
-    await page.waitForTimeout(6000);
+    // 🔥 espera curta (não longa!)
+    await page.waitForTimeout(3000);
 
     console.log("🎯 Procurando editor...");
+
     const editor = page.locator(".tiptap.ProseMirror").first();
+
+    // 🔥 valida antes de clicar
+    if (await editor.count() === 0) {
+      console.log("❌ Editor não encontrado!");
+      return;
+    }
+
     await editor.click();
 
     console.log("⌨️ Digitando prompt...");
-    await page.keyboard.type(prompt, { delay: 5 });
+    await page.keyboard.type(prompt, { delay: 3 });
 
-    await page.waitForTimeout(2000);
+    console.log("🚀 Enviando com ENTER...");
 
-    console.log("🚀 Tentando enviar...");
+    // 🔥 MAIS ESTÁVEL QUE BOTÃO
+    await page.keyboard.press("Enter");
 
-    // 🔥 TENTATIVA 1 — botão dentro do editor
-    try {
-      const botao = page.locator(".tiptap").locator("button").last();
+    console.log("✅ Prompt enviado!");
 
-      await botao.scrollIntoViewIfNeeded();
-      await botao.click({ force: true });
-
-      console.log("✅ Clique realizado!");
-    } catch (err) {
-      console.log("⚠️ Botão não funcionou, tentando ENTER...");
-      
-      // 🔥 TENTATIVA 2 — ENTER
-      await page.keyboard.press("Enter");
-      console.log("✅ Enviado com ENTER!");
-    }
-
-    await page.waitForTimeout(8000);
+    // 🔥 não esperar muito (evita kill do Render)
+    await page.waitForTimeout(3000);
 
   } catch (err) {
     console.log("❌ Erro no bot:");
     console.error(err.message || err);
   } finally {
     if (browser) {
-      await browser.close();
+      try {
+        await browser.close();
+      } catch {}
     }
   }
 }
