@@ -1,13 +1,16 @@
 import express from "express";
+import fetch from "node-fetch";
 
 const app = express();
 
 app.use(express.json());
 
+// Rota teste
 app.get("/", (req, res) => {
   res.send("Servidor rodando 🚀");
 });
 
+// Webhook GitHub
 app.post("/github-webhook", async (req, res) => {
   console.log("🔥 Push recebido do GitHub!");
 
@@ -15,24 +18,35 @@ app.post("/github-webhook", async (req, res) => {
     const repo = req.body.repository?.full_name;
     const commits = req.body.commits || [];
 
+    console.log("📦 Repo:", repo);
+
     let arquivos = [];
 
     commits.forEach(commit => {
       if (commit.added) arquivos.push(...commit.added);
       if (commit.modified) arquivos.push(...commit.modified);
+      if (commit.removed) arquivos.push(...commit.removed);
     });
 
     arquivos = [...new Set(arquivos)];
 
-    console.log("📂 Arquivos:", arquivos);
+    console.log("📂 Arquivos alterados:", arquivos);
 
     let conteudoArquivos = "";
 
-    // 🔥 BUSCA O CONTEÚDO REAL DOS ARQUIVOS
+    // 🔥 BUSCAR CONTEÚDO REAL DOS ARQUIVOS
     for (const file of arquivos) {
       try {
+        console.log("🔍 Buscando arquivo:", file);
+
         const response = await fetch(
-          `https://api.github.com/repos/${repo}/contents/${file}`
+          `https://api.github.com/repos/${repo}/contents/${file}`,
+          {
+            headers: {
+              "User-Agent": "github-bridge",
+              "Accept": "application/vnd.github.v3+json"
+            }
+          }
         );
 
         const data = await response.json();
@@ -41,35 +55,43 @@ app.post("/github-webhook", async (req, res) => {
           const decoded = Buffer.from(data.content, "base64").toString("utf-8");
 
           conteudoArquivos += `\n\n### ${file}\n${decoded}`;
+        } else {
+          console.log("⚠️ Sem conteúdo para:", file);
+          console.log(data);
         }
+
       } catch (err) {
-        console.log("Erro ao buscar arquivo:", file);
+        console.log("❌ Erro ao buscar:", file);
+        console.error(err);
       }
     }
 
     const prompt = `
 Projeto: ${repo}
 
-Aqui estão os arquivos atualizados:
+Arquivos alterados:
+${arquivos.join("\n")}
+
+Conteúdo dos arquivos:
 ${conteudoArquivos}
 
 Atualize o app com base nesses códigos.
-Mantenha design moderno e funcional.
+Mantenha design moderno, organizado e funcional.
 `;
 
     console.log("🧠 PROMPT COMPLETO:");
     console.log(prompt);
 
-    res.status(200).send("Webhook com código completo 🚀");
+    res.status(200).send("Webhook processado com sucesso 🚀");
 
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Erro");
+    console.error("❌ Erro geral:", error);
+    res.status(500).send("Erro no servidor");
   }
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
