@@ -3,22 +3,20 @@ import { chromium } from "playwright";
 export async function enviarParaLovable(prompt) {
   console.log("🤖 Iniciando bot...");
 
-  let browser;
+  const browser = await chromium.launch({
+    headless: false // 👈 importante pra funcionar melhor
+  });
+
+  const page = await browser.newPage();
 
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    });
-
-    const page = await browser.newPage();
-
     await page.goto("https://lovable.dev", {
-      waitUntil: "domcontentloaded",
-      timeout: 30000
+      waitUntil: "domcontentloaded"
     });
 
     console.log("✅ Página carregada!");
+
+    await page.waitForTimeout(4000);
 
     const editor = page.locator(".tiptap.ProseMirror").first();
 
@@ -28,7 +26,8 @@ export async function enviarParaLovable(prompt) {
     }
 
     await editor.click();
-    await page.keyboard.type(prompt);
+
+    await page.keyboard.type(prompt, { delay: 10 });
 
     await page.keyboard.press("Enter");
 
@@ -36,11 +35,5 @@ export async function enviarParaLovable(prompt) {
 
   } catch (err) {
     console.log("❌ Erro:", err.message);
-  } finally {
-    if (browser) {
-      try {
-        await browser.close();
-      } catch {}
-    }
   }
 }
