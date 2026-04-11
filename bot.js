@@ -4,7 +4,8 @@ export async function enviarParaLovable(prompt) {
   console.log("🤖 Iniciando bot Lovable...");
 
   const browser = await chromium.launch({
-    headless: true
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
   });
 
   const page = await browser.newPage();
@@ -13,21 +14,19 @@ export async function enviarParaLovable(prompt) {
     console.log("🌐 Abrindo Lovable...");
     await page.goto("https://lovable.dev");
 
-    // espera carregar
     await page.waitForTimeout(5000);
 
     console.log("⌨️ Tentando preencher prompt...");
 
-    // ⚠️ seletor genérico (vamos ajustar depois)
     await page.fill("textarea", prompt);
 
-    console.log("🚀 Tentando clicar em gerar...");
+    console.log("🚀 Tentando clicar...");
 
     await page.click("button");
 
     console.log("✅ Prompt enviado!");
 
-    await page.waitForTimeout(10000);
+    await page.waitForTimeout(5000);
 
   } catch (err) {
     console.log("❌ Erro no bot:");
