@@ -6,6 +6,7 @@ let instalado = false;
 export async function enviarParaLovable(prompt) {
   console.log("🤖 Iniciando bot Lovable...");
 
+  // instala chromium 1x
   if (!instalado) {
     try {
       console.log("📦 Instalando Chromium...");
@@ -43,6 +44,7 @@ export async function enviarParaLovable(prompt) {
 
     console.log("✅ Página carregada!");
 
+    // espera interface carregar
     await page.waitForTimeout(6000);
 
     console.log("🎯 Procurando editor...");
@@ -52,23 +54,24 @@ export async function enviarParaLovable(prompt) {
     console.log("⌨️ Digitando prompt...");
     await page.keyboard.type(prompt, { delay: 5 });
 
-    console.log("🚀 Tentando clicar em botão visível...");
+    await page.waitForTimeout(2000);
 
-    const botoes = page.locator("button");
+    console.log("🚀 Tentando enviar...");
 
-    for (let i = 0; i < await botoes.count(); i++) {
-      const botao = botoes.nth(i);
-      const isVisible = await botao.isVisible().catch(() => false);
+    // 🔥 TENTATIVA 1 — botão dentro do editor
+    try {
+      const botao = page.locator(".tiptap").locator("button").last();
 
-      if (isVisible) {
-        console.log("🎯 Tentando botão index:", i);
+      await botao.scrollIntoViewIfNeeded();
+      await botao.click({ force: true });
 
-        await botao.scrollIntoViewIfNeeded();
-        await botao.click({ force: true });
-
-        console.log("✅ Clique realizado!");
-        break;
-      }
+      console.log("✅ Clique realizado!");
+    } catch (err) {
+      console.log("⚠️ Botão não funcionou, tentando ENTER...");
+      
+      // 🔥 TENTATIVA 2 — ENTER
+      await page.keyboard.press("Enter");
+      console.log("✅ Enviado com ENTER!");
     }
 
     await page.waitForTimeout(8000);
