@@ -6,16 +6,13 @@ let instalado = false;
 export async function enviarParaLovable(prompt) {
   console.log("🤖 Iniciando bot Lovable...");
 
-  // 🔥 garante instalação do Chromium
+  // 🔥 instala chromium se precisar
   if (!instalado) {
     try {
-      console.log("📦 Instalando Chromium (Playwright)...");
-
+      console.log("📦 Instalando Chromium...");
       execSync("npx playwright install chromium", { stdio: "inherit" });
-
       console.log("✅ Chromium instalado!");
       instalado = true;
-
     } catch (err) {
       console.log("❌ Erro ao instalar Chromium:");
       console.error(err);
@@ -34,17 +31,27 @@ export async function enviarParaLovable(prompt) {
     console.log("🌐 Abrindo Lovable...");
     await page.goto("https://lovable.dev");
 
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(6000);
 
-    console.log("⌨️ Tentando preencher prompt...");
-    await page.fill("textarea", prompt);
+    console.log("🎯 Procurando campo de texto...");
 
-    console.log("🚀 Tentando clicar...");
-    await page.click("button");
+    // 🔥 seletor do editor (o que você mandou)
+    const editor = page.locator(".tiptap.ProseMirror").first();
+
+    await editor.click();
+
+    console.log("⌨️ Digitando prompt...");
+
+    await page.keyboard.type(prompt, { delay: 10 });
+
+    console.log("🚀 Procurando botão...");
+
+    // 🔥 tenta clicar no botão de gerar
+    await page.locator("button").filter({ hasText: "Generate" }).click();
 
     console.log("✅ Prompt enviado!");
 
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(8000);
 
   } catch (err) {
     console.log("❌ Erro no bot:");
